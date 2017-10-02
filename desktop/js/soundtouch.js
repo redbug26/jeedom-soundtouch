@@ -83,7 +83,7 @@ function addCmdToTable(_cmd) {
 
     //Paramètres
         tr += '<td>';
-        tr += '<span><input type="checkbox" class="cmdAttr bootstrapSwitch" data-l1key="isVisible" data-size="mini" data-label-text="{{Afficher}}" checked/></span> ';
+        tr += '<span><input type="checkbox" class="cmdAttr" data-l1key="isVisible" data-size="mini" data-label-text="{{Afficher}}" checked/></span> ';
         tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="minValue" placeholder="{{Min}}" title="{{Min}}" style="width : 20%;display : inline-block;"> ';
         tr += '<input class="tooltips cmdAttr form-control input-sm" data-l1key="configuration" data-l2key="maxValue" placeholder="{{Max}}" title="{{Max}}" style="width : 20%;display : inline-block;">';
         tr += '</td>';

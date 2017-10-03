@@ -1,0 +1,10 @@
+{
+	"id" : "jeedom-soundtouch",
+	"name" : "Jeedom SoundTouch",
+	"description" : "Bose Soundtouch plugin",
+	"licence" : "AGPL",
+	"author" : "M.Vanhove",
+	"require" : "3.0",
+	"category" : "multimedia",
+	"hasOwnDeamon" : false
+}

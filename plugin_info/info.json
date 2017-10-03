@@ -1,6 +1,6 @@
 {
-	"id" : "jeedom-soundtouch",
-	"name" : "Jeedom SoundTouch",
+	"id" : "soundtouch",
+	"name" : "SoundTouch",
 	"description" : "Bose Soundtouch plugin",
 	"licence" : "AGPL",
 	"author" : "M.Vanhove",

@@ -32,6 +32,38 @@ class soundtouch extends eqLogic {
 
 	}
 	 */
+	public static function cron($_eqLogic_id = null) {
+		if ($_eqLogic_id == null) {
+            $eqLogics = eqLogic::byType('soundtouch');
+        } else {
+            $eqLogics = array(self::byId($_eqLogic_id));
+        }
+        foreach ($eqLogics as $soundTouch) {
+            $soundtouch_name = $soundTouch->getName();
+			$soundTouch_ip = $soundTouch->getConfiguration('addr');
+	        log::add('soundtouch', "debug", "Checking if ". $soundtouch_name . " soundtouch is playing");
+            try {
+				$now_playing_xml = sendCommand($soundTouch_ip, "now_playing");
+                $now_playing = new SimpleXMLElement($now_playing_xml);
+                $source = (string)$now_playing->attributes()['source'];
+				log::add('soundtouch', "debug", $soundtouch_name .  ": Source: " . $source );
+            } catch (Exception $e) {
+                $source = "unknown";
+                log::add('soundtouch', 'error', $soundtouch_name . ": Failed reading the now_playing status");
+                log::add('soundtouch', 'debug', $e->getMessage());
+            }
+            try {
+                $status_cmd = soundtouchCmd::byEqLogicIdAndLogicalId($soundTouch->getId(), 'CMD_NOW_PLAYING');
+                $status_cmd->setValue($source);
+                $status_cmd->save();
+                $soundTouch->checkAndUpdateCmd('CMD_NOW_PLAYING',$source);
+                log::add('soundtouch', 'debug', "Value: " . $status_cmd->getValue());
+            } catch (Exception $e) {
+                log::add('soundtouch', 'error', $soundtouch_name . ": Failed setting the now_playing status");
+                log::add('soundtouch', 'debug', $e->getMessage());
+            }
+        }
+	}
 
 	/*
 	 * Fonction exécutée automatiquement toutes les heures par Jeedom
@@ -196,6 +228,51 @@ class soundtouch extends eqLogic {
 		$this->cmd_order++;
 	}
 
+	function addCommand($command, $name, $icon = "", $visible = true) {
+
+		$logicalId = "CMD_" . strtoupper($command);
+
+		$ZeebaseCmd = "";
+		foreach ($this->getCmd() as $liste_cmd) {
+			if ($liste_cmd->getLogicalId() == $logicalId) {
+				$ZeebaseCmd = $liste_cmd;
+				break;
+			}
+		}
+
+		if (!is_object($ZeebaseCmd)) {
+			log::add('soundtouch', "debug", "cmd not found");
+
+			$ZeebaseCmd = new soundtouchCmd();
+			$ZeebaseCmd->setLogicalId($logicalId);
+
+			log::add('soundtouch', "debug", "name: " . $name);
+			log::add('soundtouch', "debug", "command: " . $command);
+			log::add('soundtouch', "debug", "logicalId: " . $logicalId);
+
+			$ZeebaseCmd->setName($name);
+			$ZeebaseCmd->setType('info');
+			$ZeebaseCmd->setSubType('string');
+
+			$ZeebaseCmd->setOrder($this->cmd_order);
+
+			$ZeebaseCmd->setEqLogic_id($this->getId());
+
+			$ZeebaseCmd->setConfiguration('commandType', "command");
+			$ZeebaseCmd->setConfiguration('commandName', $command);
+
+			$ZeebaseCmd->setIsVisible($visible ? 1 : 0);
+
+			if ($icon != "") {
+				$ZeebaseCmd->setDisplay('icon', '<i class="fa ' . $icon . '"></i>');
+			}
+
+			$ZeebaseCmd->save();
+		}
+
+		$this->cmd_order++;
+	}
+
 	public function postUpdate() {
 
 /*
@@ -255,6 +332,8 @@ INVALID_KEY
 		$this->addCommandKey("ADD_FAVORITE", "add favorite", "fa-smile-o");
 		$this->addCommandKey("REMOVE_FAVORITE", "remove favorite", "fa-frown-o");
 
+		$this->addCommand("now_playing", "Source", "");
+
 		$this->addCommandVolume("", false);
 		//	$this->addCommandSay("");
 
@@ -288,15 +367,18 @@ class soundtouchCmd extends cmd {
 	public function execute($_options = array()) {
 		$soundTouch = $this->getEqLogic();
 
-//		log::add('soundtouch', "debug", print_r($_options, true));
+		log::add('soundtouch', "debug", print_r($_options, true));
 
 		$soundTouch_ip = $soundTouch->getConfiguration('addr');
+		log::add('soundtouch', "debug", "commandType: " . $this->getConfiguration('commandType'));
+		log::add('soundtouch', "debug", "commandName: " . $this->getConfiguration('commandName'));
 
 		$commandType = $this->getConfiguration('commandType');
 		$commandName = $this->getConfiguration('commandName');
 		$parameters = $this->getConfiguration('parameters');
 
 //		log::add('soundtouch', "debug", "cmd: " . $commandType);
+		log::add('soundtouch', "debug", "commandType: " . $commandType);
 
 		if ($commandType == "key") {
 			sendKeyCommand($soundTouch_ip, $commandName);

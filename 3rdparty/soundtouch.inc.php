@@ -47,6 +47,21 @@ REMOVE_FAVORITE
 INVALID_KEY
  */
 
+function sendCommand($ip, $command) {
+    $url = 'http://' . $ip . ':8090/' . $command;
+	// cURL : Query info
+	$curl = curl_init();
+	curl_setopt_array($curl,
+		array(CURLOPT_URL => 'http://' . $ip . ':8090/' . $command,
+			CURLOPT_HEADER => 0,
+			CURLOPT_RETURNTRANSFER => 1,
+			CURLOPT_HTTPHEADER => array('Content-type: text/xml'),
+		));
+	$resp = curl_exec($curl);
+	curl_close($curl);
+    return $resp;
+}
+
 function sendKeyCommand($ip, $keyname) {
 
 	// Status
